@@ -15,6 +15,10 @@ extern char tmp_buffer[];
 extern OpenSprinkler svc;
 extern ProgramData pd;
 
+enum HTTP_METHOD {
+  HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_DELETE
+};
+
 // ==================
 // JavaScript Strings
 // ==================
@@ -591,9 +595,26 @@ unsigned long getNtpTime()
 // analyze the current url
 void analyze_get_url(char *p)
 {
-  // the tcp packet usually starts with 'GET /' -> 5 chars    
-  char *str = p+5;
+  // the tcp packet usually starts with 'GET /' -> 5 chars
+  char *method = p;
+  char *str = strchr(p, '/');
+  // Seperate the two strings and point str to the first char after the space
+  *(str-1) = NULL;
+  str++;
   boolean success = false;
+  
+  // Detect which method it is
+  int methodType;
+  if (strncmp("GET", method, 3) == 0) {
+    methodType = HTTP_GET;
+  } else if (strncmp("POST", method, 4) == 0) {
+    methodType = HTTP_POST;
+  } else if (strncmp("PUT", method, 3) == 0) {
+    methodType = HTTP_PUT;
+  } else if (strncmp("DELETE", method, 6) == 0) {
+    methodType = HTTP_DELETE;
+  }
+  
   if (strncmp(" ", str, 1)==0) {
     success = print_webpage_home();
   } else if (strncmp("favicon.ico", str, 11)==0) {
