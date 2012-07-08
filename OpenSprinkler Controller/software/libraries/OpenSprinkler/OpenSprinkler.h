@@ -24,15 +24,15 @@ struct StatusBits {
   byte program_busy:1;      // when set, a program is being executed currently
   byte manual_mode:1;       // when set, the controller is in manual mode
   byte display_board:2;     // the board that is being displayed onto the lcd
-}; 
-  
+};
+
 class OpenSprinkler {
 public:
-  
+
   // ====== Data Members ======
   static LiquidCrystal lcd;
   static StatusBits status;
-  
+
   static byte options[];			// option values, each option takes one byte
   static char* options_str[];	// display string of each option
   static char* days_str[];		// string of each weekday
@@ -41,14 +41,14 @@ public:
 
   ///static unsigned long time_second_counter;   // counts number of seconds since program starts (system time)
   static unsigned long raindelay_stop_time;   // time (in seconds) when raindelay is stopped
-  
+
   // ====== Member Functions ======
   // -- Setup --
   static void reboot();
   static void begin();    // initialization, must call this function before calling other functions
   static byte start_network(byte mymac[], int http_port=80);  // initialize network with the given mac and port
   static void self_test();  // self-test function
-  
+
   // -- Options --
   static void options_setup();
   static void options_load();
@@ -61,7 +61,7 @@ public:
   static void disable();    // disable controller operation, all stations will be closed
   static void raindelay_start(byte rd);  // start raindelay for rd hours
   static void raindelay_stop(); // stop rain delay
-  static byte weekday_today();  // returns index of today's weekday (Monday is 0) 
+  static byte weekday_today();  // returns index of today's weekday (Monday is 0)
   static void manual_mode_on();  // switch controller to manual mode
   static void manual_mode_off(); // switch controller to program mode
   // -- Station schedules --
@@ -75,7 +75,7 @@ public:
   // -- Weather --
   static void location_get(char* loc);  // read location string from eeprom
   static void location_set(char* loc);  // write location string to eeprom
-  
+
   // -- LCD functions --
   static void lcd_print_pgm(PGM_P PROGMEM str);           // print a program memory string
   static void lcd_print_line_clear_pgm(PGM_P PROGMEM str, byte line);
@@ -84,7 +84,7 @@ public:
   static void lcd_print_ip(const byte *ip, int http_port);// print ip and port number
   static void lcd_print_station(byte line, char c);       // print station bits of the board selected by display_board
   static void lcd_print_status(); // print selected status bits
- 
+
   // -- Button and UI functions --
   static byte button_read(byte waitmode); // Read button value. options for 'waitmodes' are:
                                           // BUTTON_WAIT_NONE, BUTTON_WAIT_RELEASE, BUTTON_WAIT_HOLD

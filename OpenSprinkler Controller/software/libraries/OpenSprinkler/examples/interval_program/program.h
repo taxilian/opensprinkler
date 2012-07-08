@@ -41,14 +41,14 @@ struct LogStruct {
 extern OpenSprinkler svc;
 
 class ProgramData {
-public:  
+public:
   static unsigned int remaining_time[];	// remaining schedule time for each station
   static unsigned long scheduled_stop_time[]; // scheduled stop time for each station
   static byte scheduled_program_index[];  // scheduled program index
   static unsigned int scheduled_duration[]; // scheduled duration (in seconds)
   static byte  nprograms;     // number of programs
   static LogStruct lastrun;   // last run log
-  
+
   static void init();
   static void reset_runtime();
   static void erase();
@@ -59,7 +59,7 @@ public:
   static unsigned int check_match(byte sid, time_t t, byte *pid);
   static void drem_to_relative(byte days[2]); // absolute to relative reminder conversion
   static void drem_to_absolute(byte days[2]);
-private:  
+private:
   static void load_count();
   static void save_count();
 };

@@ -105,7 +105,7 @@ typedef enum {
   #define PIN_LCD_D6        16    // LCD d6 pin
   #define PIN_LCD_D7        17    // LCD d7 pin
   #define PIN_RAINSENSOR     3    // by default rain sensor pin is connected to pin D3
-                                  // change if you need	
+                                  // change if you need
 #else
 
   #define PIN_READ_BUTTON    0    // analog pin assigned for button reading
@@ -120,7 +120,7 @@ typedef enum {
   #define PIN_LCD_D7        17    // LCD d7 pin
   #define PIN_ETHER_RESET    9    // Ethernet reset pin
   #define PIN_RAINSENSOR     3    // by default rain sensor is connected to pin D3
-                                  // change if you need  
+                                  // change if you need
 #endif
 
 // ====== Button Defines ======

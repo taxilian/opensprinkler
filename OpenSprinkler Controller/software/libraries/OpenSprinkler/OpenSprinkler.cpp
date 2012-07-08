@@ -13,24 +13,24 @@ StatusBits OpenSprinkler::status;
 byte OpenSprinkler::station_bits[MAX_EXT_BOARDS+1];
 
 unsigned long OpenSprinkler::raindelay_stop_time = 0;
-  
+
 // Default option values
 byte OpenSprinkler::options[NUM_OPTIONS] = {
   SVC_FW_VERSION , // firmware version
   (-4+12), // default time zone: GMT-4
   1,  // 0: use static ip, 1: use dhcp
   192,// static ip
-  168, 
-  1,   
-  22,  
+  168,
+  1,
+  22,
   192,// static gateway ip
   168,
   1,
   1,
   0,  // number of extension board. 0-> no extension boards
-  0,	// index of master station. 0-> no master station
+  0,    // index of master station. 0-> no master station
   1,  // sequential bit. 0-> stations can run concurrently; 1-> stations run sequentially
-  0,	// rain sensor control bit. 0-> ignore rain sensor; 1-> use rain sensor
+  0,    // rain sensor control bit. 0-> ignore rain sensor; 1-> use rain sensor
   0,  // real-time clock (RTC) bit. 0-> do not use RTC; 1-> use RTC (not available on all hardware)
   0   // reset all settings to default
 };
@@ -38,22 +38,22 @@ byte OpenSprinkler::options[NUM_OPTIONS] = {
 
 // Option maximum values
 prog_uchar OpenSprinkler::options_max[NUM_OPTIONS] PROGMEM = {
-  0,		// fw_ver
-  24,		// tz
-  1,		// dhcp
-  255,	// ip
+  0,        // fw_ver
+  24,       // tz
+  1,        // dhcp
+  255,  // ip
   255,
   255,
   255,
-  255,	// gw
+  255,  // gw
   255,
   255,
   255,
   MAX_EXT_BOARDS, // ext
-  8,		// mas
+  8,        // mas
   1,    // seq
-  1,		// urs
-  1,		// rtc
+  1,        // urs
+  1,        // rtc
   1     // reset
 };
 
@@ -112,10 +112,10 @@ prog_uchar OpenSprinkler::options_flag[NUM_OPTIONS] PROGMEM={
   OPFLAG_WEB_EDIT, // ext
   OPFLAG_WEB_EDIT, // mas
   OPFLAG_WEB_EDIT | OPFLAG_BOOL,// seq
-  OPFLAG_WEB_EDIT | OPFLAG_BOOL,// urs    
+  OPFLAG_WEB_EDIT | OPFLAG_BOOL,// urs
   OPFLAG_BOOL,    // rtc
   OPFLAG_BOOL     // reset
-};  
+};
 
 // Weekday display strings
 prog_char str_day0[] PROGMEM = "Mon";
@@ -148,10 +148,10 @@ byte OpenSprinkler::start_network(byte mymac[], int http_port) {
 
   lcd_print_lines_clear_pgm(PSTR("Connecting to"), PSTR(" the network..."));
 
-  ether.hisport = http_port;    
-  
+  ether.hisport = http_port;
+
   if(!ether.begin(ETHER_BUFFER_SIZE, mymac))  return 0;
-  
+
   if (options[OPTION_USE_DHCP]) {
     if (!ether.dhcpSetup()) return 0;
   } else {
@@ -181,65 +181,65 @@ void OpenSprinkler::begin() {
 
   // shift register setup
   pinMode(PIN_SR_LATCH, OUTPUT);
-#ifdef PIN_SR_OE  
+#ifdef PIN_SR_OE
   pinMode(PIN_SR_OE, OUTPUT);
 #endif
   pinMode(PIN_SR_CLOCK, OUTPUT);
   pinMode(PIN_SR_DATA,  OUTPUT);
-  
+
   digitalWrite(PIN_SR_LATCH, HIGH);
 
 #ifdef PIN_SR_OE
   // pull shift register OE high to disable output
   digitalWrite(PIN_SR_OE, HIGH);
 #endif
- 
-	// Reset all stations
+
+    // Reset all stations
   clear_all_station_bits();
   apply_all_station_bits();
-  
-#ifdef PIN_SR_OE  
+
+#ifdef PIN_SR_OE
   // pull shift register OE low to enable output
   digitalWrite(PIN_SR_OE, LOW);
 #endif
- 
-#ifdef PIN_RAINSENSOR  
+
+#ifdef PIN_RAINSENSOR
   // Rain sensor port set up
   pinMode(PIN_RAINSENSOR, INPUT);
   digitalWrite(PIN_RAINSENSOR, HIGH); // enabled internal pullup
 #endif
-  
+
   // Init I2C
   Wire.begin();
-  
+
   // Reset status variables
-	status.enabled = 1;
-	status.rain_delayed = 0;
-	status.rain_sensed = 0;
-	status.network_failed = 0;
-	status.program_busy = 0;
-	status.manual_mode = 0;
-	status.display_board = 0;
+  status.enabled = 1;
+  status.rain_delayed = 0;
+  status.rain_sensed = 0;
+  status.network_failed = 0;
+  status.program_busy = 0;
+  status.manual_mode = 0;
+  status.display_board = 0;
 
   // begin lcd
   lcd.begin(16, 2);
-  
+
 }
 
 // Self_test function
 void OpenSprinkler::self_test() {
-	byte sid;
-	while(1) {
-		for(sid=0; sid<(1+options[OPTION_EXT_BOARDS])*8; sid++) {
-			lcd_print_line_clear_pgm(PSTR(""), 1);
-			lcd.setCursor(0, 1);
-			lcd.print((int)sid+1);
-			clear_all_station_bits();
-			set_station_bit(sid, 1);
-			apply_all_station_bits();
-			delay(5000);	// run each station for 5 seconds
-		}
-	}
+    byte sid;
+    while(1) {
+        for(sid=0; sid<(1+options[OPTION_EXT_BOARDS])*8; sid++) {
+            lcd_print_line_clear_pgm(PSTR(""), 1);
+            lcd.setCursor(0, 1);
+            lcd.print((int)sid+1);
+            clear_all_station_bits();
+            set_station_bit(sid, 1);
+            apply_all_station_bits();
+            delay(5000);    // run each station for 5 seconds
+        }
+    }
 }
 
 // ==================
@@ -257,12 +257,12 @@ void OpenSprinkler::set_station_bit(byte sid, byte value) {
   byte s = sid % 8;       // station bit index
   if (value) {
     station_bits[bid] = station_bits[bid] | ((byte)1<<s);
-  } 
+  }
   else {
     station_bits[bid] = station_bits[bid] &~((byte)1<<s);
   }
- 	set_master_station_bit();
-}		
+    set_master_station_bit();
+}
 
 // Reset and turn off all stations
 /*void OpenSprinkler::reset_allstations() {
@@ -296,25 +296,25 @@ void OpenSprinkler::apply_all_station_bits() {
     for(s=0;s<8;s++) {
       digitalWrite(PIN_SR_CLOCK, LOW);
       digitalWrite(PIN_SR_DATA, (bitvalue & ((byte)1<<(7-s))) ? HIGH : LOW );
-      digitalWrite(PIN_SR_CLOCK, HIGH);          
+      digitalWrite(PIN_SR_CLOCK, HIGH);
     }
   }
   digitalWrite(PIN_SR_LATCH, HIGH);
-}		
+}
 
 // Set master station bit
 void OpenSprinkler::set_master_station_bit() {
-	if (options[OPTION_MASTER_STATION] != 0) {
-		// start by turning the master station's bit off (in case it's set for some reason)
-		station_bits[0] = station_bits[0] & ~((byte)1<<(options[OPTION_MASTER_STATION]-1));
-		for (byte bid=0;bid<=options[OPTION_EXT_BOARDS];bid++) {
-			if (station_bits[bid] != 0) {
-				// if any station is schedule to open, set the master station bit as well
-				station_bits[0] = station_bits[0] | ((byte)1<<(options[OPTION_MASTER_STATION]-1));
-				break;
-			}
-		}
-	}
+    if (options[OPTION_MASTER_STATION] != 0) {
+        // start by turning the master station's bit off (in case it's set for some reason)
+        station_bits[0] = station_bits[0] & ~((byte)1<<(options[OPTION_MASTER_STATION]-1));
+        for (byte bid=0;bid<=options[OPTION_EXT_BOARDS];bid++) {
+            if (station_bits[bid] != 0) {
+                // if any station is schedule to open, set the master station bit as well
+                station_bits[0] = station_bits[0] | ((byte)1<<(options[OPTION_MASTER_STATION]-1));
+                break;
+            }
+        }
+    }
 }
 
 // =================
@@ -328,38 +328,38 @@ void OpenSprinkler::options_setup() {
     options_save(); // write default option values
     password_set(DEFAULT_PASSWORD); // write default password
     location_set(DEFAULT_LOCATION); // write default location
-    
+
     // reset internal eeprom
     lcd_print_lines_clear_pgm(PSTR("Resetting EEPROM"), PSTR("Please wait..."));
     for(int i=ADDR_EEPROM_USER; i<INT_EEPROM_SIZE; i++) {
-      eeprom_write_byte((unsigned char *) i, 0);      
+      eeprom_write_byte((unsigned char *) i, 0);
     }
     // also need to reset external eeprom
     // ray: todo
-  } 
+  }
   else {
     options_load();
   }
 
-	byte button = button_read(BUTTON_WAIT_NONE);
-	
-	switch(button & BUTTON_MASK) {
-	case BUTTON_1:
-  	// if BUTTON_1 is pressed during startup, perform self-test
-	  lcd_print_line_clear_pgm(PSTR("Self testing..."), 0);
-	  self_test();
-		break;
-		
+    byte button = button_read(BUTTON_WAIT_NONE);
+
+    switch(button & BUTTON_MASK) {
+    case BUTTON_1:
+    // if BUTTON_1 is pressed during startup, perform self-test
+      lcd_print_line_clear_pgm(PSTR("Self testing..."), 0);
+      self_test();
+        break;
+
   case BUTTON_2:
-  	// if BUTTON_2 is pressed during startup, jump to 'reset all options'
-		ui_set_options(OPTION_RESET);
-		if (options[OPTION_RESET]) {
-			resetFunc();
-		}
-		break;
-		
-	case BUTTON_3:
-  	// if BUTTON_3 is pressed during startup, enter Setup option mode
+    // if BUTTON_2 is pressed during startup, jump to 'reset all options'
+        ui_set_options(OPTION_RESET);
+        if (options[OPTION_RESET]) {
+            resetFunc();
+        }
+        break;
+
+    case BUTTON_3:
+    // if BUTTON_3 is pressed during startup, enter Setup option mode
     lcd_print_line_clear_pgm(PSTR("==Set Options=="), 0);
     delay(DISPLAY_MSG_MS);
     lcd_print_lines_clear_pgm(PSTR("B3:sel B1/B2:chg"), PSTR("B3:hold to save"));
@@ -367,7 +367,7 @@ void OpenSprinkler::options_setup() {
     lcd.clear();
     ui_set_options(0);
     if (options[OPTION_RESET]) {
-      resetFunc(); 
+      resetFunc();
     }
   }
 }
@@ -424,14 +424,14 @@ void OpenSprinkler::raindelay_stop() {
 }
 
 void OpenSprinkler::manual_mode_on() {
-	// Reset all stations
+    // Reset all stations
   clear_all_station_bits();
   apply_all_station_bits();
   status.manual_mode = 1;
 }
 
 void OpenSprinkler::manual_mode_off() {
-	// Reset all stations
+    // Reset all stations
   clear_all_station_bits();
   apply_all_station_bits();
   status.manual_mode = 0;
@@ -445,7 +445,7 @@ void OpenSprinkler::location_set(char* loc) {
   for (; (*loc)!=0; loc++, i++) {
     eeprom_write_byte((unsigned char*)(ADDR_EEPROM_LOCATION+i), *(loc));
   }
-  eeprom_write_byte((unsigned char*)(ADDR_EEPROM_LOCATION+i), 0);  
+  eeprom_write_byte((unsigned char*)(ADDR_EEPROM_LOCATION+i), 0);
 }
 
 void OpenSprinkler::location_get(char *buf) {
@@ -480,7 +480,7 @@ void OpenSprinkler::lcd_print_line_clear_pgm(PGM_P PROGMEM str, byte line) {
     lcd.print((char)c);
     cnt++;
   }
-  for(; (16-cnt) >= 0; cnt ++) lcd.print(' ');  
+  for(; (16-cnt) >= 0; cnt ++) lcd.print(' ');
 }
 
 // Print two program memory strings with clearing
@@ -524,9 +524,9 @@ void OpenSprinkler::lcd_print_ip(const byte *ip, int http_port) {
   lcd.clear();
   lcd.setCursor(0, 0);
   for (byte i=0; i<3; i++) {
-    lcd.print(ip[i], DEC); 
+    lcd.print(ip[i], DEC);
     lcd.print('.');
-  }   
+  }
   lcd.print(ip[3], DEC);
   lcd.setCursor(0, 1);
   lcd.print("Port: ");
@@ -548,30 +548,30 @@ void OpenSprinkler::lcd_print_station(byte line, char c) {
     lcd.print((int)status.display_board);
     lcd.print(":");   // extension boards are displayed as E1, E2...
   }
-  
+
   if (!status.enabled) {
-  	lcd_print_line_clear_pgm(PSTR("-- Disabled! -- "), 1);
+    lcd_print_line_clear_pgm(PSTR("-- Disabled! -- "), 1);
   }
   else if (status.rain_delayed || (status.rain_sensed && options[OPTION_USE_RAINSENSOR])) {
     lcd_print_line_clear_pgm(PSTR("-Rain Delayed!- "), 1);
   }
   else {
-	  byte bitvalue = station_bits[status.display_board];
-	  for (byte s=0; s<8; s++) {
-	    if (status.display_board == 0 &&(s+1) == options[OPTION_MASTER_STATION]) {
-	      lcd.print('M'); // mark master station as 'M'
-	    } else {
-	      lcd.print((bitvalue&1) ? (char)c : '_');
-	    }
-  	  bitvalue >>= 1;
-	  }
-	}
-	lcd_print_pgm(PSTR("     "));
+      byte bitvalue = station_bits[status.display_board];
+      for (byte s=0; s<8; s++) {
+        if (status.display_board == 0 &&(s+1) == options[OPTION_MASTER_STATION]) {
+          lcd.print('M'); // mark master station as 'M'
+        } else {
+          lcd.print((bitvalue&1) ? (char)c : '_');
+        }
+      bitvalue >>= 1;
+      }
+    }
+    lcd_print_pgm(PSTR("     "));
 }
 
 // Print an option value
 void OpenSprinkler::lcd_print_option(int i) {
-  lcd_print_line_clear_pgm(options_str[i], 0);  
+  lcd_print_line_clear_pgm(options_str[i], 0);
   lcd.setCursor(0, 1);
   int tz;
   switch(i) {
@@ -614,7 +614,7 @@ byte OpenSprinkler::button_read_busy(int value, byte waitmode, byte butt, byte i
          (waitmode == BUTTON_WAIT_RELEASE || (waitmode == BUTTON_WAIT_HOLD && hold_time<BUTTON_HOLD_MS))) {
     read_value = analogRead(PIN_READ_BUTTON);
     delay(BUTTON_DELAY_MS);
-    hold_time += BUTTON_DELAY_MS;      
+    hold_time += BUTTON_DELAY_MS;
   };
   if (is_holding || hold_time >= BUTTON_HOLD_MS)
     butt |= BUTTON_FLAG_HOLD;
@@ -641,7 +641,7 @@ byte OpenSprinkler::button_read(byte waitmode)
   }
   else if (read_value > 150) {
     curr = button_read_busy(150, waitmode, BUTTON_3, is_holding);
-  } 
+  }
 #else
   if (read_value > 750) {
     curr = button_read_busy(750, waitmode, BUTTON_1, is_holding);
@@ -651,7 +651,7 @@ byte OpenSprinkler::button_read(byte waitmode)
   }
   else if (read_value > 100) {
     curr = button_read_busy(100, waitmode, BUTTON_3, is_holding);
-  } 
+  }
 #endif
 
   /* set flags in return value */
@@ -689,12 +689,12 @@ void OpenSprinkler::ui_set_options(int oid)
       break;
 
     case BUTTON_3:
-      if (!(button & BUTTON_FLAG_DOWN)) break; 
+      if (!(button & BUTTON_FLAG_DOWN)) break;
       if (button & BUTTON_FLAG_HOLD) {
         // long press, save options
         options_save();
         finished = true;
-      } 
+      }
       else {
         // click, move to the next option
         if (i==OPTION_USE_DHCP && options[i]) i += 9; // if use DHCP, skip static ip set
@@ -716,7 +716,7 @@ void OpenSprinkler::ui_set_time() {
   byte odm = time_display_mode;
 
   time_display_mode = 0;  // turn to full time display
-  lcd_print_time(0);  
+  lcd_print_time(0);
 
   lcd_print_line_clear_pgm(PSTR("Set current time"), 1);
   lcd.blink();
@@ -757,7 +757,7 @@ void OpenSprinkler::ui_set_time() {
       break;
 
     case BUTTON_3:
-      if (!(button & BUTTON_FLAG_DOWN)) break; 
+      if (!(button & BUTTON_FLAG_DOWN)) break;
       if (button & BUTTON_FLAG_HOLD)  finished = true;
       else
       {
@@ -769,7 +769,7 @@ void OpenSprinkler::ui_set_time() {
 
     if (button != BUTTON_NONE) {
       t = now();
-      lcd_print_time(0);          
+      lcd_print_time(0);
       lcd.setCursor(cursor_move[field],0);
       te = (millis() / 1000) + BUTTON_IDLE_TIMEOUT;
     }
@@ -788,23 +788,23 @@ int OpenSprinkler::ui_set_raindelay()
   boolean finished = false;
   boolean timeout = false;
   byte button;
-  
+
   byte rd = 0;
-  
+
   lcd.clear();
   lcd_print_line_clear_pgm(PSTR("Set rain delay"), 1);
   lcd_print_raindelay(rd, 0);
   lcd.blink();
-  
+
   time_t te = ((millis()/1000)) + BUTTON_IDLE_TIMEOUT;
 
   while (!finished && !timeout) {
     button = button_read(BUTTON_WAIT_HOLD);
-   
+
     if ((millis()/1000) == te)
-      timeout = true;   
+      timeout = true;
     if (!(button & BUTTON_FLAG_DOWN)) continue;  // repond only to button down event
-    
+
    switch(button & BUTTON_MASK) {
     case BUTTON_2:
       rd = (rd+24) % SC_RAINDELAY_MAX;    // longest rain delay time is a week: 5 days
@@ -812,16 +812,16 @@ int OpenSprinkler::ui_set_raindelay()
     case BUTTON_3:
       if (!(button & BUTTON_FLAG_DOWN)) break;
       if (button & BUTTON_FLAG_HOLD) {
-        finished = true; 
+        finished = true;
       }
     }
-    
+
     if (button != BUTTON_NONE) {
       lcd_print_raindelay(rd, 0);
       te = (millis() / 1000) + BUTTON_IDLE_TIMEOUT;  // time out in 10 seconds
     }
   }
-  
+
   lcd.noBlink();
   if (timeout)  return -1;
   else return rd;
