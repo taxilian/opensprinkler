@@ -126,6 +126,8 @@ prog_char str_day4[] PROGMEM = "Fri";
 prog_char str_day5[] PROGMEM = "Sat";
 prog_char str_day6[] PROGMEM = "Sun";
 
+prog_char* str_days[7] = {str_day0, str_day1, str_day2, str_day3, str_day4, str_day5, str_day6};
+
 char* OpenSprinkler::days_str[7] = {
   str_day0,
   str_day1,

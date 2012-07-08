@@ -15,6 +15,8 @@ extern char tmp_buffer[];
 extern OpenSprinkler svc;
 extern ProgramData pd;
 
+extern prog_char* str_days[];
+
 enum HTTP_METHOD {
   HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_DELETE
 };
@@ -59,6 +61,9 @@ const prog_char htmlUnauthorized[] PROGMEM =
 
 const prog_char jsonProgTypeWeekly[] PROGMEM = "weekly";
 const prog_char jsonProgTypeInterval[] PROGMEM = "interval";
+const prog_char jsonStringEven[] PROGMEM = "even";
+const prog_char jsonStringOdd[] PROGMEM = "odd";
+const prog_char jsonStringNone[] PROGMEM = "none";
 const prog_char jsonComma[] PROGMEM = ",";
 
 // fill program data
@@ -100,6 +105,7 @@ boolean print_webpage_view_program(char *str, byte pos) {
 
 boolean REST_program(char *str, int method) {
   byte pid, bid;
+  boolean first;
   ProgramStruct prog;  
   
   // Output the number of boards
@@ -115,11 +121,11 @@ boolean REST_program(char *str, int method) {
     // convert interval remainder (absolute->relative)
     if (prog.days[1] > 1)  pd.drem_to_relative(prog.days);
  
-    bfill.emit_p(PSTR("{\"type\":\"$F\",\"start\":$D,\"end\":$D,\"duration\":$D,\"interval\":$D,\"stations\":[["), jsonProgTypeInterval, prog.start_time, prog.end_time, prog.duration, prog.interval);
+    bfill.emit_p(PSTR("{\"type\":\"$F\",\"start\":$D,\"end\":$D,\"duration\":$D,\"interval\":$D,\"stations\":[["), type, prog.start_time, prog.end_time, prog.duration, prog.interval);
     
     for (bid=0; bid<=svc.options[OPTION_EXT_BOARDS]; bid++) {
       byte stations = prog.stations[bid];
-      boolean first = true;
+      first = true;
       if (bid > 0) bfill.emit_p(PSTR("],["));
       for (byte i = 0; i < 8; ++i) {
         if (1 << i & stations) {
@@ -129,7 +135,25 @@ boolean REST_program(char *str, int method) {
         }
       }
     }
-    bfill.emit_p(PSTR("]]}"));
+    if (type == jsonProgTypeWeekly) {
+      const prog_char *limit = jsonStringNone;
+      if (prog.days[0] & 0x80) {
+        if (prog.days[1] == 0) limit = jsonStringEven;
+        else if (prog.days[1] == 1) limit = jsonStringOdd;
+      }
+      bfill.emit_p(PSTR("]],\"limit\":\"$F\",\"days\":["), limit);
+      first = true;
+      for (byte i = 0; i < 7; ++i) {
+        if (1 << i & prog.days[0]) {
+          if (!first) bfill.emit_p(jsonComma);
+          bfill.emit_p(PSTR("\"$F\""), str_days[i]);
+          first = false;
+        }
+      }
+      bfill.emit_p(PSTR("]}"));
+    } else {
+      bfill.emit_p(PSTR("]],\"frequency\":$D,\"delay\":$D}"), prog.days[1], prog.days[0] & 0x7f);
+    }
   }
   bfill.emit_p(PSTR("]"));
   
