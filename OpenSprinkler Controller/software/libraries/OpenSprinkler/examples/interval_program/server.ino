@@ -24,25 +24,33 @@ enum HTTP_METHOD {
 // ==================
 prog_uchar htmlExtJavascriptPath[] PROGMEM = JAVASCRIPT_PATH;
 
-prog_uchar htmlOkHeader[] PROGMEM = 
+const prog_char htmlOkHeader[] PROGMEM = 
     "HTTP/1.0 200 OK\r\n"
-    "Content-Type: text/html\r\n"
     "Pragma: no-cache\r\n"
+;
+
+const prog_char htmlHtmlType[] PROGMEM =
+    "Content-Type: text/html\r\n"
     "\r\n"
 ;
 
-prog_uchar htmlMobileHeader[] PROGMEM =
+const prog_char htmlJsonType[] PROGMEM =
+    "Content-Type: application/json\r\n"
+    "\r\n"
+;
+
+const prog_char htmlMobileHeader[] PROGMEM =
     "<meta name=viewport content=\"width=640\">\r\n"
 ;
 
-prog_uchar htmlFavicon[] PROGMEM = 
+const prog_char htmlFavicon[] PROGMEM = 
     "HTTP/1.0 301 Moved Permanently\r\nLocation: "
     "http://rayshobby.net/rayshobby.ico"
     "\r\n\r\nContent-Type: text/html\r\n\r\n"
     "<h1>301 Moved Permanently</h1>\n"
 ;
 
-prog_uchar htmlUnauthorized[] PROGMEM = 
+const prog_char htmlUnauthorized[] PROGMEM = 
     "HTTP/1.0 401 Unauthorized\r\n"
     "Content-Type: text/html\r\n"
     "\r\n"
@@ -77,7 +85,7 @@ void bfill_programdata()
 
 boolean print_webpage_view_program(char *str, byte pos) {
 
-  bfill.emit_p(PSTR("$F$F<script>"), htmlOkHeader, htmlMobileHeader);
+  bfill.emit_p(PSTR("$F$F$F<script>"), htmlOkHeader, htmlHtmlType, htmlMobileHeader);
   
   bfill_programdata();
   
@@ -95,7 +103,7 @@ boolean print_webpage_modify_program(char *p, byte pos) {
   }
   int pid=atoi(tmp_buffer);
   if (!(pid>=-1 && pid< pd.nprograms)) return false;
-  bfill.emit_p(PSTR("$F$F"), htmlOkHeader, htmlMobileHeader);
+  bfill.emit_p(PSTR("$F$F$F"), htmlOkHeader, htmlHtmlType, htmlMobileHeader);
   bfill.emit_p(PSTR("<script>var nboards=$D;var pid=$D;"),
                svc.options[OPTION_EXT_BOARDS]+1, pid);
   // if(pid>-1), this is modifying an existing program
@@ -144,12 +152,12 @@ boolean print_webpage_delete_program(char *p, byte pos) {
   } else if (pid < pd.nprograms) {
     pd.del(pid);
   } else {
-    bfill.emit_p(PSTR("$F<script>alert(\"Program index out of range.\")</script>\n"), htmlOkHeader);
+    bfill.emit_p(PSTR("$F$F<script>alert(\"Program index out of range.\")</script>\n"), htmlOkHeader, htmlHtmlType);
     bfill.emit_p(PSTR("<meta http-equiv=\"refresh\" content=\"0; url=/vp\">"));    
     return true;
   }
 
-  bfill.emit_p(PSTR("$F<meta http-equiv=\"refresh\" content=\"0; url=/vp\">"), htmlOkHeader);
+  bfill.emit_p(PSTR("$F$F<meta http-equiv=\"refresh\" content=\"0; url=/vp\">"), htmlOkHeader, htmlHtmlType);
   return true;
 }
 
@@ -189,7 +197,7 @@ boolean print_webpage_plot_program(char *p, byte pos) {
     if (!(yy>=1970))  return false;
   }
   
-  bfill.emit_p(PSTR("$F$F<script>var seq=$D,mas=$D,devday=$D,devmin=$D,dd=$D,mm=$D,yy=$D;"), htmlOkHeader, htmlMobileHeader,
+  bfill.emit_p(PSTR("$F$F$F<script>var seq=$D,mas=$D,devday=$D,devmin=$D,dd=$D,mm=$D,yy=$D;"), htmlOkHeader, htmlHtmlType, htmlMobileHeader,
                svc.options[OPTION_SEQUENTIAL], svc.options[OPTION_MASTER_STATION], devday, devmin, dd, mm, yy);
 
   bfill_programdata();
@@ -263,7 +271,7 @@ boolean print_webpage_change_program(char *p, byte pos) {
   // process interval day remainder (relative-> absolute)
   if (prog.days[1] > 1)  pd.drem_to_absolute(prog.days);
       
-  bfill.emit_p(PSTR("$F<script>"), htmlOkHeader);
+  bfill.emit_p(PSTR("$F$F<script>"), htmlOkHeader, htmlHtmlType);
 
   if (pid==-1) {
     pd.add(&prog); 
@@ -280,7 +288,7 @@ boolean print_webpage_change_program(char *p, byte pos) {
 boolean print_webpage_home()
 {
   byte bid, sid;
-  bfill.emit_p(PSTR("$F$F"), htmlOkHeader, htmlMobileHeader);
+  bfill.emit_p(PSTR("$F$F$F"), htmlOkHeader, htmlHtmlType, htmlMobileHeader);
   bfill.emit_p(PSTR("<script>var ver=$D,devt=$L;\n"),
                SVC_FW_VERSION, now());
   bfill.emit_p(PSTR("var nbrd=$D,seq=$D,tz=$D,sbits=["),
@@ -314,7 +322,7 @@ boolean print_webpage_home()
 
 boolean print_webpage_view_options()
 {
-  bfill.emit_p(PSTR("$F$F"), htmlOkHeader, htmlMobileHeader);
+  bfill.emit_p(PSTR("$F$F$F"), htmlOkHeader, htmlHtmlType, htmlMobileHeader);
   bfill.emit_p(PSTR("<script>var opts=["));
 
   byte oid;
@@ -357,7 +365,7 @@ boolean print_webpage_change_values(char *p, byte pos)
 #define TIME_REBOOT_DELAY  12
 
   if (ether.findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, "rst") && atoi(tmp_buffer) > 0) {
-    bfill.emit_p(PSTR("$F<meta http-equiv=\"refresh\" content=\"$D; url=/\">"), htmlOkHeader, TIME_REBOOT_DELAY);
+    bfill.emit_p(PSTR("$F$F<meta http-equiv=\"refresh\" content=\"$D; url=/\">"), htmlOkHeader, htmlHtmlType, TIME_REBOOT_DELAY);
     bfill.emit_p(PSTR("Rebooting, wait for $D seconds..."), TIME_REBOOT_DELAY);
     ether.httpServerReply(bfill.position());   
     svc.reboot();
@@ -401,7 +409,7 @@ boolean print_webpage_change_values(char *p, byte pos)
   }  
  
   
-  bfill.emit_p(PSTR("$F<meta http-equiv=\"refresh\" content=\"0; url=/\">"), htmlOkHeader);
+  bfill.emit_p(PSTR("$F$F<meta http-equiv=\"refresh\" content=\"0; url=/\">"), htmlOkHeader, htmlHtmlType);
   return true;
 }
   
@@ -447,7 +455,7 @@ boolean print_webpage_change_options(char *p, byte pos)
   }
   
   if (err) {
-    bfill.emit_p(PSTR("$F<script>alert(\"Some values are out of bound.\")</script>\n"), htmlOkHeader);
+    bfill.emit_p(PSTR("$F$F<script>alert(\"Some values are out of bound.\")</script>\n"), htmlOkHeader, htmlHtmlType);
     bfill.emit_p(PSTR("<meta http-equiv=\"refresh\" content=\"0; url=/vo\">"));
     return true;
   } 
@@ -458,15 +466,15 @@ boolean print_webpage_change_options(char *p, byte pos)
     char tbuf2[TMP_BUFFER_SIZE];
     if (ether.findKeyVal(p, tbuf2, TMP_BUFFER_SIZE, "cpw") && strcmp(tmp_buffer, tbuf2) == 0) {
       svc.password_set(tmp_buffer);
-      bfill.emit_p(PSTR("$F<script>alert(\"New password set.\")</script>\n"), htmlOkHeader);
+      bfill.emit_p(PSTR("$F$F<script>alert(\"New password set.\")</script>\n"), htmlOkHeader, htmlHtmlType);
     } else {
-      bfill.emit_p(PSTR("$F<script>alert(\"Confirmation does not match!\")</script>\n"), htmlOkHeader);
+      bfill.emit_p(PSTR("$F$F<script>alert(\"Confirmation does not match!\")</script>\n"), htmlOkHeader, htmlHtmlType);
     }
     bfill.emit_p(PSTR("<meta http-equiv=\"refresh\" content=\"0; url=/vo\">"));
     return true;
   }
 
-  bfill.emit_p(PSTR("$F<script>alert(\"Options values saved.\")</script>\n"), htmlOkHeader);
+  bfill.emit_p(PSTR("$F$F<script>alert(\"Options values saved.\")</script>\n"), htmlOkHeader, htmlHtmlType);
   bfill.emit_p(PSTR("<meta http-equiv=\"refresh\" content=\"0; url=/vo\">"));
   
   if (old_tz != svc.options[OPTION_TIMEZONE]) {
@@ -512,7 +520,7 @@ boolean print_webpage_station_bits(char *p, byte pos) {
     // this is a set command
     // can only do it when in manual mode
     if (!svc.status.manual_mode) {
-      bfill.emit_p(PSTR("$F<script>alert(\"Station bits can only be set in manual mode.\")</script>\n</script>"), htmlOkHeader);
+      bfill.emit_p(PSTR("$F$F<script>alert(\"Station bits can only be set in manual mode.\")</script>\n</script>"), htmlOkHeader, htmlHtmlType);
       return true;
     }
     // parse value
@@ -529,11 +537,11 @@ boolean print_webpage_station_bits(char *p, byte pos) {
     } else {
       return false;
     }
-    bfill.emit_p(PSTR("$F<meta http-equiv=\"refresh\" content=\"0; url=/\">"), htmlOkHeader);      
+    bfill.emit_p(PSTR("$F$F<meta http-equiv=\"refresh\" content=\"0; url=/\">"), htmlOkHeader, htmlHtmlType);      
     return true;
   } else {
     // this is a get command
-    bfill.emit_p(PSTR("$F"), htmlOkHeader);
+    bfill.emit_p(PSTR("$F$F"), htmlOkHeader, htmlHtmlType);
     if (sid==0) { // print all station bits
       sidmin=0;sidmax=(svc.options[OPTION_EXT_BOARDS]+1)*8;
     } else {  // print one station bit
