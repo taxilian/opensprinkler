@@ -57,6 +57,10 @@ const prog_char htmlUnauthorized[] PROGMEM =
     "<h1>401 Unauthorized</h1>"
 ;
 
+const prog_char jsonProgTypeWeekly[] PROGMEM = "weekly";
+const prog_char jsonProgTypeInterval[] PROGMEM = "interval";
+const prog_char jsonComma[] PROGMEM = ",";
+
 // fill program data
 void bfill_programdata()
 {
@@ -91,6 +95,44 @@ boolean print_webpage_view_program(char *str, byte pos) {
   
   bfill.emit_p(PSTR("</script>\n<script src=\"$F/viewprog.js\"></script>\n"), htmlExtJavascriptPath);
 
+  return true;
+}
+
+boolean REST_program(char *str, int method) {
+  byte pid, bid;
+  ProgramStruct prog;  
+  
+  // Output the number of boards
+  bfill.emit_p(PSTR("$F$F["), htmlOkHeader, htmlJsonType, svc.options[OPTION_EXT_BOARDS]+1);
+  
+  for (pid=0; pid<pd.nprograms; pid++) {
+    if (pid) bfill.emit_p(jsonComma);
+    pd.read(pid, &prog);
+    const prog_char *type = jsonProgTypeWeekly;
+    if (prog.days[0] & 0x80 && prog.days[1] > 1) {
+      type = jsonProgTypeInterval;
+    }
+    // convert interval remainder (absolute->relative)
+    if (prog.days[1] > 1)  pd.drem_to_relative(prog.days);
+ 
+    bfill.emit_p(PSTR("{\"type\":\"$F\",\"start\":$D,\"end\":$D,\"duration\":$D,\"interval\":$D,\"stations\":[["), jsonProgTypeInterval, prog.start_time, prog.end_time, prog.duration, prog.interval);
+    
+    for (bid=0; bid<=svc.options[OPTION_EXT_BOARDS]; bid++) {
+      byte stations = prog.stations[bid];
+      boolean first = true;
+      if (bid > 0) bfill.emit_p(PSTR("],["));
+      for (byte i = 0; i < 8; ++i) {
+        if (1 << i & stations) {
+          if (!first) bfill.emit_p(jsonComma);
+          bfill.emit_p(PSTR("$D"), i);
+          first = false;
+        }
+      }
+    }
+    bfill.emit_p(PSTR("]]}"));
+  }
+  bfill.emit_p(PSTR("]"));
+  
   return true;
 }
 
@@ -645,6 +687,8 @@ void analyze_get_url(char *p)
     success = print_webpage_change_options(str, 2);
   } else if (strncmp("sn", str, 2)==0) { // get/set station bits
     success = print_webpage_station_bits(str, 2);
+  } else if (strncmp("api/program", str, 11)==0) { // REST api for getting/setting program
+    success = REST_program(str+11, methodType);
   }
   if (success == false) {
     bfill.emit_p(PSTR("$F"), htmlUnauthorized);
