@@ -20,7 +20,8 @@
 // This is the path where external Javascripst are stored
 // To create custom Javascripts, you need to make a copy of the scripts
 // and put them to your own server, or github, or any available file hosting service
-#define JAVASCRIPT_PATH  "http://rayshobby.net/scripts/java/svc1.6" 
+//#define JAVASCRIPT_PATH  "http://rayshobby.net/scripts/java/svc1.6" 
+#define JAVASCRIPT_PATH "/js"
 //"https://github.com/rayshobby/opensprinkler/raw/master/scripts/java/svc1.6"
 
 
