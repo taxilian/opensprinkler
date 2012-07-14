@@ -5,14 +5,14 @@
 //     For all details and documentation:
 //     http://backbonejs.org
 
-define(["underscore"], function(_){
+define(["underscore", "jquery"], function(_, $){
 
   // Initial Setup
   // -------------
 
   // Save a reference to the global object (`window` in the browser, `global`
   // on the server).
-  var root = {_:_};
+  var root = {_:_, jQuery:$};
 
   // Save the previous value of the `Backbone` variable, so that it can be
   // restored later on, if `noConflict` is used.

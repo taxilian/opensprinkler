@@ -1,0 +1,20 @@
+{
+  "author": "Richard Bateman",
+  "name": "sprinkler_dev",
+  "description": "Development env for opensprinkler web stuff so you don't have to build each time",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/taxilian/opensprinkler.git"
+  },
+  "main": "dev.js",
+  "engines": {
+    "node": "~0.6.11"
+  },
+  "dependencies": {
+    "express": "=3.0.0beta6",
+    "http-proxy": "=0.8.1"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {}
+}

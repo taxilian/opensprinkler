@@ -19,17 +19,20 @@
     <button style="height:36" onclick="gf.submit()"><img src="http://rayshobby.net/images/icons/svc_preview.png" height="20" align="absmiddle">Preview</button>
     <br><hr>
 
-    <% _.each(programs, function(p, i) { %>
+    <% if (programs === null) { %>
+        Loading...
+    <%} else { %>
+    <% programs.each(function(p, i) { %>
         <b>Program <%= i+1 %>: <%= p.description() %></b>
-        <br><b>Time</b>: <%= p.getStartTime() %> - <%= p.getEndTime() %>
+        <br><b>Time</b>: <%= p.getStartTime() %> - <%= p.getStopTime() %>
         <br><b>Every</b> <%= p.formatInterval() %>
         <br><b>Run</b>: <%= p.formatDuration() %>
         <br><b>Stations applied</b>:<br>
         <table border="1">
-            <% _.each(p.get("stations"), function(list, ext) {
+            <% _.each(p.get("stations"), function(list, ext) { %>
               <tr>
               <% _.times(7, function(sNo) { var sid = 1 + sNo + 8*ext; sid = (sid < 10) ? "0"+sid : sid; %>
-                <td class="<% if (p.stationActive(ext, sNo)) { %>active<%}%>">S<%=sid%></td>
+                <td class="<% if (p.isStationActive(ext, sNo)) { %>active<%}%>">S<%=sid%></td>
               <% }); %>
               </tr>
             <% }); %>
@@ -38,4 +41,4 @@
         <br><button style="height:28" onclick="del(df,0)">Delete</button>
         <button style="height:28" onclick="mod(mf,0)">Modify</button>
         <hr>
-    <% }); %>
+    <% }); } %>

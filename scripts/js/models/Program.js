@@ -38,6 +38,11 @@ define(["backbone", "underscore"], function(Backbone, _) {
             return this.formatLongTime(intv);
         },
 
+        formatDuration: function() {
+            var intv = this.get("intv");
+            return this.formatLongTime(intv);
+        },
+
         description: function() {
             var type = this.get("type"),
                 delay = this.get("delay"),
@@ -60,7 +65,29 @@ define(["backbone", "underscore"], function(Backbone, _) {
                 else if (limit == "even") { out += " (Even days only)"; }
             }
             return out;
+        },
+
+        isStationActive: function(ext, sNo) {
+            return _.indexOf(this.get("stations")[ext], sNo) != -1;
         }
     });
 
+    var Programs = Backbone.Collection.extend({
+        model: Program,
+        url: "/api/program"
+    }, {
+        fetchAll: function() {
+            // Make an AJAX request to get all program objects
+            var tmp = new this();
+            // .fetch() returns a deferred object w/ the AJAX request; we want to return
+            // the actual Programs collection, so we pipe the deferred object and return
+            // the new collection instead
+            return tmp.fetch().pipe(function() { return tmp; });
+        }
+    });
+
+    return {
+        model: Program,
+        collection: Programs
+    };
 });
