@@ -6,6 +6,7 @@
 */
 
 #include <OpenSprinkler.h>
+#include <json.h>
 
 // External variables defined in main pde file
 extern int ntpclientportL;
@@ -16,6 +17,8 @@ extern OpenSprinkler svc;
 extern ProgramData pd;
 
 extern prog_char* str_days[];
+
+JSON json;
 
 enum HTTP_METHOD {
   HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_DELETE
@@ -105,14 +108,15 @@ boolean print_webpage_view_program(char *str, byte pos) {
 
 boolean REST_program(char *str, int method) {
   byte pid, bid;
-  boolean first;
   ProgramStruct prog;  
   
   // Output the number of boards
-  bfill.emit_p(PSTR("$F$F["), htmlOkHeader, htmlJsonType, svc.options[OPTION_EXT_BOARDS]+1);
+  bfill.emit_p(PSTR("$F$F"), htmlOkHeader, htmlJsonType);
   
+  json.beginDocument();
+  json.startArray();
   for (pid=0; pid<pd.nprograms; pid++) {
-    if (pid) bfill.emit_p(jsonComma);
+    json.startObject();
     pd.read(pid, &prog);
     const prog_char *type = jsonProgTypeWeekly;
     if (prog.days[0] & 0x80 && prog.days[1] > 1) {
@@ -121,41 +125,46 @@ boolean REST_program(char *str, int method) {
     // convert interval remainder (absolute->relative)
     if (prog.days[1] > 1)  pd.drem_to_relative(prog.days);
  
-    bfill.emit_p(PSTR("{\"type\":\"$F\",\"start\":$D,\"end\":$D,\"duration\":$D,\"interval\":$D,\"stations\":[["), type, prog.start_time, prog.end_time, prog.duration, prog.interval);
+    json.writeStringValue(PSTR("type"), type);
+    json.writeIntValue(PSTR("st"), prog.start_time);
+    json.writeIntValue(PSTR("end"), prog.end_time);
+    json.writeIntValue(PSTR("dur"), prog.duration);
+    json.writeIntValue(PSTR("intv"), prog.interval);
     
+    json.startArray(PSTR("stations"));
     for (bid=0; bid<=svc.options[OPTION_EXT_BOARDS]; bid++) {
+      json.startArray();
       byte stations = prog.stations[bid];
-      first = true;
-      if (bid > 0) bfill.emit_p(PSTR("],["));
       for (byte i = 0; i < 8; ++i) {
         if (1 << i & stations) {
-          if (!first) bfill.emit_p(jsonComma);
-          bfill.emit_p(PSTR("$D"), i);
-          first = false;
+          json.writeInt(i);
         }
       }
+      json.endArray();
     }
+    json.endArray();
+    
     if (type == jsonProgTypeWeekly) {
       const prog_char *limit = jsonStringNone;
       if (prog.days[0] & 0x80) {
         if (prog.days[1] == 0) limit = jsonStringEven;
         else if (prog.days[1] == 1) limit = jsonStringOdd;
       }
-      bfill.emit_p(PSTR("]],\"limit\":\"$F\",\"days\":["), limit);
-      first = true;
+      json.writeStringValue(PSTR("limit"), limit);
+      json.startArray(PSTR("days"));
       for (byte i = 0; i < 7; ++i) {
         if (1 << i & prog.days[0]) {
-          if (!first) bfill.emit_p(jsonComma);
-          bfill.emit_p(PSTR("\"$F\""), str_days[i]);
-          first = false;
+          json.writeInt(i);
         }
       }
-      bfill.emit_p(PSTR("]}"));
+      json.endArray();
     } else {
-      bfill.emit_p(PSTR("]],\"frequency\":$D,\"delay\":$D}"), prog.days[1], prog.days[0] & 0x7f);
+      json.writeIntValue(PSTR("frequency"), prog.days[1]);
+      json.writeIntValue(PSTR("delay"), prog.days[0] & 0x7f);
     }
+    json.endObject();
   }
-  bfill.emit_p(PSTR("]"));
+  json.endArray();
   
   return true;
 }

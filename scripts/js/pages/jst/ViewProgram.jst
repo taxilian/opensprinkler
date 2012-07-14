@@ -1,0 +1,41 @@
+<h4><a href="/">&lt;-Home</a></h4>
+
+<form name="df" action="dp" method="get">
+    <input type="hidden" name="pw">
+    <input type="hidden" name="pid">
+</form>
+<form name="mf" action="mp" method="get">
+    <input type="hidden" name="pid">
+</form>
+<form name="gf" action="gp" method="get" target="_blank">
+    <input type="hidden" name="d" value="today">
+</form>
+
+<button style="height:36" onclick="mod(mf,-1)">
+    <img src="http://rayshobby.net/images/icons/svc_addall.png" height="20" align="absmiddle">
+    Add a New Program
+</button>
+    <button style="height:36" onclick="del(df,-1)"><img src="http://rayshobby.net/images/icons/svc_delall.png" height="20" align="absmiddle">Delete All</button>
+    <button style="height:36" onclick="gf.submit()"><img src="http://rayshobby.net/images/icons/svc_preview.png" height="20" align="absmiddle">Preview</button>
+    <br><hr>
+
+    <% _.each(programs, function(p, i) { %>
+        <b>Program <%= i+1 %>: <%= p.description() %></b>
+        <br><b>Time</b>: <%= p.getStartTime() %> - <%= p.getEndTime() %>
+        <br><b>Every</b> <%= p.formatInterval() %>
+        <br><b>Run</b>: <%= p.formatDuration() %>
+        <br><b>Stations applied</b>:<br>
+        <table border="1">
+            <% _.each(p.get("stations"), function(list, ext) {
+              <tr>
+              <% _.times(7, function(sNo) { var sid = 1 + sNo + 8*ext; sid = (sid < 10) ? "0"+sid : sid; %>
+                <td class="<% if (p.stationActive(ext, sNo)) { %>active<%}%>">S<%=sid%></td>
+              <% }); %>
+              </tr>
+            <% }); %>
+        </table>
+
+        <br><button style="height:28" onclick="del(df,0)">Delete</button>
+        <button style="height:28" onclick="mod(mf,0)">Modify</button>
+        <hr>
+    <% }); %>
