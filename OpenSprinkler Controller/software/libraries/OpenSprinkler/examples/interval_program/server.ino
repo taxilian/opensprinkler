@@ -44,6 +44,12 @@ const prog_char htmlJsonType[] PROGMEM =
     "\r\n"
 ;
 
+const prog_char htmlBasicPage[] PROGMEM =
+  "<!DOCTYPE html>\r\n"
+  "<html><head><title>OpenSprinkler</title><meta http-equiv=\"Access-Control-Allow-Origin\" content=\"*\"></head><body>"
+  "<script data-main=\"$F/index\" src=\"$F/ext/require-jquery.js\"></script></body></html>"
+;
+
 const prog_char htmlMobileHeader[] PROGMEM =
     "<meta name=viewport content=\"width=640\">\r\n"
 ;
@@ -103,6 +109,12 @@ boolean print_webpage_view_program(char *str, byte pos) {
   
   bfill.emit_p(PSTR("</script>\n<script src=\"$F/viewprog.js\"></script>\n"), htmlExtJavascriptPath);
 
+  return true;
+}
+
+boolean print_html_home() {
+  bfill.emit_p(PSTR("$F$F"), htmlOkHeader, htmlHtmlType);
+  bfill.emit_p(htmlBasicPage, htmlExtJavascriptPath, htmlExtJavascriptPath);
   return true;
 }
 
@@ -700,6 +712,8 @@ void analyze_get_url(char *p)
   
   if (strncmp(" ", str, 1)==0) {
     success = print_webpage_home();
+  } else if (strncmp("new", str, 3)==0) {
+    success = print_html_home();
   } else if (strncmp("favicon.ico", str, 11)==0) {
     success = print_webpage_favicon();
   } else if (strncmp("cv", str, 2)==0) {  // change values
