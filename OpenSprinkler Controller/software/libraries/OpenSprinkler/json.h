@@ -24,6 +24,7 @@ public:
     void startObject(const prog_char* key);
     void endObject();
 
+    void writeCStringValue(const prog_char* key, const char* value);
     void writeStringValue(const prog_char* key, const prog_char* value);
     void writeIntValue(const prog_char* key, const int val);
 

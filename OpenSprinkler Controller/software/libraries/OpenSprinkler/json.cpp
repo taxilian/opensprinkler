@@ -57,6 +57,11 @@ void JSON::commaIfFirst() {
 }
 
 // Document output methods
+void JSON::writeCStringValue(const prog_char* key, const char* value) {
+    outputKey(key);
+    bfill.emit_p(json_quotedStr, value);
+}
+// Document output methods
 void JSON::writeStringValue(const prog_char* key, const prog_char* value) {
     outputKey(key);
     bfill.emit_p(json_quotedPStr, value);

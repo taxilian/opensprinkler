@@ -407,6 +407,33 @@ boolean print_webpage_home()
   return true;
 }
 
+boolean REST_getOptions(int method)
+{
+  byte oid;
+  // Output the number of boards
+  bfill.emit_p(PSTR("$F$F"), htmlOkHeader, htmlJsonType);
+  
+  json.beginDocument();
+  json.startObject();
+  
+  json.startObject(PSTR("opts"));
+  for (oid=0; oid<NUM_OPTIONS; oid++) {
+    if ((svc.option_get_flag(oid) & OPFLAG_WEB_EDIT) == 0) continue;
+    json.startArray(svc.options_str[oid]);
+    json.writeInt(svc.option_get_flag(oid)&OPFLAG_BOOL);
+    json.writeInt((oid==OPTION_TIMEZONE) ? (int)svc.options[oid]-12 : (int)svc.options[oid]);
+    json.writeInt(oid);
+    json.endArray();
+  }
+  json.endObject();
+
+  svc.location_get(tmp_buffer);
+  json.writeCStringValue(PSTR("loc"), tmp_buffer);
+  json.endObject();
+  
+  return true;
+}
+
 boolean print_webpage_view_options()
 {
   bfill.emit_p(PSTR("$F$F$F"), htmlOkHeader, htmlHtmlType, htmlMobileHeader);
@@ -736,6 +763,8 @@ void analyze_get_url(char *p)
     success = print_webpage_station_bits(str, 2);
   } else if (strncmp("api/program", str, 11)==0) { // REST api for getting/setting program
     success = REST_program(str+11, methodType);
+  } else if (strncmp("api/options", str, 11)==0) { // REST api for getting/setting program
+    success = REST_getOptions(methodType);
   }
   if (success == false) {
     bfill.emit_p(PSTR("$F"), htmlUnauthorized);
